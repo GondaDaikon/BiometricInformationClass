@@ -12,6 +12,9 @@ pylint = "*"
 matplotlib = "*"
 notebook = "*"
 ipykernel = "*"
+glob3 = "*"
+imageio = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.7.4"
