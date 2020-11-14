@@ -1,6 +1,4 @@
-
 import numpy
-import scipy.special
 from neuralnetwork import neuralNetwork
 
 # 入力層、隠れ層、出力層のノード数
