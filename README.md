@@ -28,4 +28,19 @@ data_root
 ├── pylintrc  
 └── train.py  
 ```
-
+### 3. データセットの学習  
+プログラム内で読み込まれた*.csvファイルを読み込み学習を開始します。  
+```
+$ python train.py  
+```
+### 4. 学習精度の計算  
+trainModelに置かれたの学習済みのモデルを読み込んで学習精度(正答率)を計算します。  
+```
+$ python test.py  
+```
+### 5. 学習済みモデルのBack Query  
+trainModelに置かれたの学習済みのモデルを読み込んで、プログラム内で設定したlabelBack Queryをします。  
+Back Queryの結果は"dataSet/my_own_images/backquery_images"に保存されます。
+```
+$ python backquery.py  
+```
