@@ -5,7 +5,7 @@ import scipy.special
 class neuralNetwork:
 
     # ニューラルネットワークの初期化
-    def __init__(self, inputnodes, hiddennods,        outputnods, learningrate):
+    def __init__(self, inputnodes, hiddennods, outputnods, learningrate):
         # 入力層、隠れ層、出力層のノード数の設定
         self.inodes = inputnodes
         self.hnodes = hiddennods
@@ -24,6 +24,7 @@ class neuralNetwork:
 
         # 活性化関数はシグモイド関数
         self.activation_function = lambda x: scipy.special.expit(x)
+        self.inverse_activation_function = lambda x: scipy.special.logit(x)
 
         pass
 
@@ -56,7 +57,7 @@ class neuralNetwork:
 
         pass
     
-    # ニューラルネットワークへの照会\
+    # ニューラルネットワークへの照会
     def query(self, inputs_list):
         # 入力リストを行列に変換
         inputs = numpy.array(inputs_list, ndmin=2).T
@@ -72,3 +73,44 @@ class neuralNetwork:
         final_outputs = self.activation_function(final_inputs)
 
         return final_outputs
+
+    def backquery(self, targets_list):
+        # transpose the targets list to a vertical array
+        final_outputs = numpy.array(targets_list, ndmin=2).T
+        
+        # calculate the signal into the final output layer
+        final_inputs = self.inverse_activation_function(final_outputs)
+
+        # calculate the signal out of the hidden layer
+        hidden_outputs = numpy.dot(self.who.T, final_inputs)
+        # scale them back to 0.01 to .99
+        hidden_outputs -= numpy.min(hidden_outputs)
+        hidden_outputs /= numpy.max(hidden_outputs)
+        hidden_outputs *= 0.98
+        hidden_outputs += 0.01
+        
+        # calculate the signal into the hidden layer
+        hidden_inputs = self.inverse_activation_function(hidden_outputs)
+        
+        # calculate the signal out of the input layer
+        inputs = numpy.dot(self.wih.T, hidden_inputs)
+        # scale them back to 0.01 to .99
+        inputs -= numpy.min(inputs)
+        inputs /= numpy.max(inputs)
+        inputs *= 0.98
+        inputs += 0.01
+        
+        return inputs
+    
+    def save_parameters(self):
+        parameters = numpy.array([self.inodes, self.hnodes, self.onodes, self.lrate])
+        numpy.save('trainedModel/parameters.npy',parameters)
+        self.save_weights()
+
+    def save_weights(self):
+        numpy.save('trainedModel/weights/who.npy', self.who)
+        numpy.save('trainedModel/weights/wih.npy', self.wih)
+
+    def load_weights(self):
+        self.who = numpy.load('trainedModel/weights/who.npy')
+        self.wih = numpy.load('trainedModel/weights/wih.npy')
