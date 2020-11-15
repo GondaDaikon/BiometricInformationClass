@@ -33,5 +33,5 @@ image_data = n.backquery(targets)
 # plot image data
 image_data = image_data.reshape(28,28)
 image_name = str(label) + '_backquery.png'
-image_path = 'dataSet/my_own_images/backquery_images/' + image_name
+image_path = 'my_own_images/backquery_images/' + image_name
 imageio.imwrite(image_path, image_data[:, :])

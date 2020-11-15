@@ -6,7 +6,7 @@ import numpy
 # our own image test data set
 our_own_dataset = []
 
-for image_file_name in glob.glob('dataSet/my_own_images/my_own_?.png'):
+for image_file_name in glob.glob('my_own_images/my_own_?.png'):
     print ("loading ... ", image_file_name)
     # use the filename to set the correct label
     label = int(image_file_name[-5:-4])
@@ -24,7 +24,7 @@ for image_file_name in glob.glob('dataSet/my_own_images/my_own_?.png'):
     our_own_dataset.append(record)
     pass
 
-with open('dataSet/my_own_images/my_own_dataset.csv','a',newline='') as f:
+with open('my_own_images/my_own_dataset.csv','a',newline='') as f:
     writer = csv.writer(f)
     for data in our_own_dataset:
         print(data)
