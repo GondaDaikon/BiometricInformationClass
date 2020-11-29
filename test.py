@@ -10,8 +10,10 @@ hidden_nodes = int(parameters[1])
 output_nodes = int(parameters[2])
 # 学習率
 learning_rate = parameters[3]
+# 隠れ層の数
+hiddenlayers = int(parameters[4])
 # ニューラルネットワークのインスタンス生成
-n = neuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
+n = neuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate, hiddenlayers)
 # 保存した重みを読み込む
 n.load_weights()
 # ===学習モデルを読み込み終わり====

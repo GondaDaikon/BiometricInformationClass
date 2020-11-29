@@ -8,10 +8,12 @@ input_nodes = 784
 hidden_nodes = 100
 output_nodes = 10
 
+hiddenlayers = 3
+
 # 学習率　＝　0.3
 learning_rate = 0.1
 # ニューラルネットワークのインスタンス生成
-n = neuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate)
+n = neuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate, hiddenlayers)
 
 # MNIST 訓練データのCSV ファイルを読み込んでリストにする
 training_data_file = open("dataSet/mnist_train.csv", 'r')

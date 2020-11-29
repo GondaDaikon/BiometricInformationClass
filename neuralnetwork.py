@@ -5,11 +5,13 @@ import scipy.special
 class neuralNetwork:
 
     # ニューラルネットワークの初期化
-    def __init__(self, inputnodes, hiddennods, outputnods, learningrate):
+    def __init__(self, inputnodes, hiddennods, outputnods, learningrate, hiddenlayers=1):
         # 入力層、隠れ層、出力層のノード数の設定
         self.inodes = inputnodes
         self.hnodes = hiddennods
         self.onodes = outputnods
+        # 隠れ層の数
+        self.hlayers = hiddenlayers
 
         # リンクの重み行列 wih と who
         # 行列内の重み w_i_j, ノードiから次の層のノードjへのリンクの重み
@@ -17,6 +19,15 @@ class neuralNetwork:
         # w12 w22 など
         # numpy.random.normal(平均、標準偏差、（行、列）)
         self.wih = numpy.random.normal(0.0, pow(self.hnodes, -0.5),(self.hnodes, self.inodes))
+
+        # -- 隠れ層の重み生成 開始 --
+        self.whh = numpy.empty((self.hlayers-1,self.hnodes,self.hnodes))
+
+        for layer in range(self.hlayers-1):
+            whh = numpy.random.normal(0.0, pow(self.hnodes, -0.5),(self.hnodes, self.hnodes))
+            self.whh[layer,:,:] = whh
+        # -- 隠れ層の重み生成 終了 --
+
         self.who = numpy.random.normal(0.0, pow(self.onodes, -0.5),(self.onodes, self.hnodes))
 
         # 学習率の設定
@@ -35,25 +46,56 @@ class neuralNetwork:
         targets = numpy.array(targets_list, ndmin=2).T
 
         # 隠れ層に入ってくる信号の計算
-        hidden_inputs = numpy.dot(self.wih, inputs)
+        firsthlayer_input = numpy.dot(self.wih, inputs)
         # 隠れ層で結合された信号を活性化関数により出力
-        hidden_outputs = self.activation_function(hidden_inputs)
+        firsthlayer_output = self.activation_function(firsthlayer_input)
+
+        ## -- 隠れ層間の計算 開始 --
+        lasthlayer_output = firsthlayer_output
+        hidden_inputs = numpy.empty((self.hlayers,self.hnodes,1))
+        hidden_outputs = numpy.empty((self.hlayers,self.hnodes,1))
+        hidden_inputs[0,:,:] = firsthlayer_input
+        hidden_outputs[0,:,:] = firsthlayer_output
+        for i, whh in enumerate(reversed(self.whh)):
+            hidden_inputs[i+1,:,:] = numpy.dot(whh, hidden_outputs[i,:,:])
+            hidden_outputs[i+1,:,:] = self.activation_function(hidden_inputs[i+1,:,:])
+            if i == (len(self.whh)-1):
+                lasthlayer_output = hidden_outputs[(len(self.whh)-1),:,:]
+        hidden_outputs = numpy.flipud(hidden_outputs)
+        ## -- 隠れ層間の計算 終了 --
 
         # 出力層に入ってくる信号の計算
-        final_inputs = numpy.dot(self.who, hidden_outputs)
+        final_inputs = numpy.dot(self.who, lasthlayer_output)
         # 出力層で結合された信号を活性化関数により出力
         final_outputs = self.activation_function(final_inputs)
 
         # 出力層の誤差　＝　（目標出力　ー　最終出力）
         output_errors = targets - final_outputs
         # 隠れ層の誤差は出力層の誤差をリンクの重みの割合で分配
-        hidden_errors = numpy.dot(self.who.T, output_errors)
+        lasthlayer_errors = numpy.dot(self.who.T, output_errors)
+
+        ## -- 隠れ層間の誤差分配 開始 --
+        hidden_errors = numpy.empty((self.hlayers,self.hnodes,1))
+        hidden_errors[0,:,:] = lasthlayer_errors
+        firsthlayer_errors = lasthlayer_errors
+        for i, whh in enumerate(reversed(self.whh)):
+            hidden_errors[i+1,:,:] = numpy.dot(whh.T, hidden_errors[i,:,:])
+            if i == (len(self.whh)-1):
+                firsthlayer_errors = hidden_errors[(len(self.whh)-1),:,:]
+        ## -- 隠れ層間の誤差分配 終了 --
 
         # 隠れ層と出力層の間のリンクの重みを更新
-        self.who += self.lrate * numpy.dot((output_errors * final_outputs * (1.0 - final_outputs)),numpy.transpose(hidden_outputs))
+        self.who += self.lrate * numpy.dot((output_errors * final_outputs * (1.0 - final_outputs)),numpy.transpose(lasthlayer_output))
+        
+        ## -- 隠れ層間の重みを更新 開始 --
+        for i, whh in enumerate(reversed(self.whh)):
+            self.whh[(len(self.whh)-1) -i,:,:] += self.lrate * numpy.dot(\
+                (hidden_errors[i,:,:] * hidden_outputs[i,:,:] * (1.0 - hidden_outputs[i,:,:])),\
+                    numpy.transpose(hidden_outputs[i+1,:,:]))
+        ## -- 隠れ層間の重みを更新 終了 --
 
         # 入力層と隠れ層の間のリンクの重みを更新
-        self.wih += self.lrate * numpy.dot((hidden_errors * hidden_outputs * (1.0 - hidden_outputs)),numpy.transpose(inputs))
+        self.wih += self.lrate * numpy.dot((firsthlayer_errors * firsthlayer_output * (1.0 - firsthlayer_output)),numpy.transpose(inputs))
 
         pass
     
@@ -66,6 +108,12 @@ class neuralNetwork:
         hidden_inputs = numpy.dot(self.wih, inputs)
         # 隠れ層で結合された信号を活性化関数により出力
         hiden_outputs = self.activation_function(hidden_inputs)
+
+        # -- 隠れ層間の信号の計算 開始 --
+        for whh in self.whh:
+            hidden_inputs = numpy.dot(whh, hiden_outputs)
+            hiden_outputs = self.activation_function(hidden_inputs)
+        # -- 隠れ層間の信号の計算 終了 --
 
         # 出力層に入ってくる信号の計算
         final_inputs = numpy.dot(self.who, hiden_outputs)
@@ -103,14 +151,16 @@ class neuralNetwork:
         return inputs
     
     def save_parameters(self):
-        parameters = numpy.array([self.inodes, self.hnodes, self.onodes, self.lrate])
+        parameters = numpy.array([self.inodes, self.hnodes, self.onodes, self.lrate, self.hlayers])
         numpy.save('trainedModel/parameters.npy',parameters)
         self.save_weights()
 
     def save_weights(self):
-        numpy.save('trainedModel/weights/who.npy', self.who)
         numpy.save('trainedModel/weights/wih.npy', self.wih)
+        numpy.save('trainedModel/weights/whh.npy', self.whh)
+        numpy.save('trainedModel/weights/who.npy', self.who)
 
     def load_weights(self):
-        self.who = numpy.load('trainedModel/weights/who.npy')
         self.wih = numpy.load('trainedModel/weights/wih.npy')
+        self.who = numpy.load('trainedModel/weights/whh.npy')
+        self.who = numpy.load('trainedModel/weights/who.npy')
