@@ -8,7 +8,7 @@ input_nodes = 784
 hidden_nodes = 100
 output_nodes = 10
 
-hiddenlayers = 3
+hiddenlayers = 2
 
 # 学習率　＝　0.3
 learning_rate = 0.1
@@ -20,7 +20,7 @@ training_data_file = open("dataSet/mnist_train.csv", 'r')
 training_data_list = training_data_file.readlines()
 training_data_file.close()
 
-epochs = 1
+epochs = 5
 
 training_count = len(training_data_list) * epochs
 training_bar = tqdm(total = training_count)
@@ -57,6 +57,7 @@ for e in range(epochs):
         #progress training_bar
         training_bar.update(1)
         pass
+    print(n.loss/len(training_data_list))
     pass
 training_bar.close()
 

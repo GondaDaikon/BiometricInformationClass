@@ -24,14 +24,17 @@ class neuralNetwork:
         self.whh = numpy.empty((self.hlayers-1,self.hnodes,self.hnodes))
 
         for layer in range(self.hlayers-1):
-            whh = numpy.random.normal(0.0, pow(self.hnodes, -0.5),(self.hnodes, self.hnodes))
-            self.whh[layer,:,:] = whh
+            tmp = numpy.random.normal(0.0, pow(self.hnodes, -0.5),(self.hnodes, self.hnodes))
+            self.whh[layer,:,:] = tmp
         # -- 隠れ層の重み生成 終了 --
 
         self.who = numpy.random.normal(0.0, pow(self.onodes, -0.5),(self.onodes, self.hnodes))
 
         # 学習率の設定
         self.lrate = learningrate
+
+        # 誤差の設定
+        self.loss = 0
 
         # 活性化関数はシグモイド関数
         self.activation_function = lambda x: scipy.special.expit(x)
@@ -56,11 +59,11 @@ class neuralNetwork:
         hidden_outputs = numpy.empty((self.hlayers,self.hnodes,1))
         hidden_inputs[0,:,:] = firsthlayer_input
         hidden_outputs[0,:,:] = firsthlayer_output
-        for i, whh in enumerate(reversed(self.whh)):
+        for i, whh in enumerate(self.whh):
             hidden_inputs[i+1,:,:] = numpy.dot(whh, hidden_outputs[i,:,:])
             hidden_outputs[i+1,:,:] = self.activation_function(hidden_inputs[i+1,:,:])
             if i == (len(self.whh)-1):
-                lasthlayer_output = hidden_outputs[(len(self.whh)-1),:,:]
+                lasthlayer_output = hidden_outputs[i+1,:,:]
         hidden_outputs = numpy.flipud(hidden_outputs)
         ## -- 隠れ層間の計算 終了 --
 
@@ -71,6 +74,13 @@ class neuralNetwork:
 
         # 出力層の誤差　＝　（目標出力　ー　最終出力）
         output_errors = targets - final_outputs
+
+        # 出力層の誤差を保存
+        eroor = 0
+        for errror in output_errors:
+                eroor += errror*errror
+        self.loss += eroor/len(output_errors)
+
         # 隠れ層の誤差は出力層の誤差をリンクの重みの割合で分配
         lasthlayer_errors = numpy.dot(self.who.T, output_errors)
 
@@ -81,7 +91,7 @@ class neuralNetwork:
         for i, whh in enumerate(reversed(self.whh)):
             hidden_errors[i+1,:,:] = numpy.dot(whh.T, hidden_errors[i,:,:])
             if i == (len(self.whh)-1):
-                firsthlayer_errors = hidden_errors[(len(self.whh)-1),:,:]
+                firsthlayer_errors = hidden_errors[i+1,:,:]
         ## -- 隠れ層間の誤差分配 終了 --
 
         # 隠れ層と出力層の間のリンクの重みを更新
@@ -162,5 +172,5 @@ class neuralNetwork:
 
     def load_weights(self):
         self.wih = numpy.load('trainedModel/weights/wih.npy')
-        self.who = numpy.load('trainedModel/weights/whh.npy')
+        self.whh = numpy.load('trainedModel/weights/whh.npy')
         self.who = numpy.load('trainedModel/weights/who.npy')
