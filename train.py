@@ -8,10 +8,10 @@ input_nodes = 784
 hidden_nodes = 100
 output_nodes = 10
 
-hiddenlayers = 2
+hiddenlayers = 3
 
 # 学習率　＝　0.3
-learning_rate = 0.1
+learning_rate = 0.01
 # ニューラルネットワークのインスタンス生成
 n = neuralNetwork(input_nodes, hidden_nodes, output_nodes, learning_rate, hiddenlayers)
 
@@ -20,7 +20,7 @@ training_data_file = open("dataSet/mnist_train.csv", 'r')
 training_data_list = training_data_file.readlines()
 training_data_file.close()
 
-epochs = 5
+epochs = 1
 
 training_count = len(training_data_list) * epochs
 training_bar = tqdm(total = training_count)
